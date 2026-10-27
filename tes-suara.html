@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tes Suara Mandarin</title>
+<style>
+:root{--bg:#f6f4f0;--fg:#1d1b19;--mut:#6b655e;--card:#fff;--line:#ddd7ce;--acc:#c0392b;--ok:#1e7a46;--bad:#b3261e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171514;--fg:#f1ece6;--mut:#a39b92;--card:#221f1d;--line:#3a3532;--acc:#ff7a66;--ok:#5fcf8f;--bad:#ff8a80;color-scheme:dark}}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1{font-size:22px;margin:0}
+p{margin:0;color:var(--mut)}
+.step{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.step h2{font-size:15px;margin:0}
+button{font:inherit;font-weight:600;padding:12px 14px;border-radius:8px;border:0;background:var(--acc);color:#fff;min-height:44px}
+button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.hanzi{font-size:40px;line-height:1.1}
+.res{font-size:14px;font-family:ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;color:var(--mut)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+textarea{width:100%;min-height:150px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;font:12px ui-monospace,monospace;box-sizing:border-box}
+</style>
+</head>
+<body>
+<main>
+<h1>Tes Suara Mandarin</h1>
+<p>Tekan tombol satu per satu, lalu jawab apakah kamu mendengar suaranya. Naikkan volume media HP dulu dan matikan mode senyap.</p>
+
+<section class="step"><h2>Tes 1. Bunyi bip</h2>
+<p>Memeriksa apakah halaman ini bisa mengeluarkan suara sama sekali.</p>
+<button id="b1" type="button">Putar bip</button><div class="res" id="r1">Belum diuji</div></section>
+
+<section class="step"><h2>Tes 2. Suara Mandarin bawaan HP</h2>
+<div class="hanzi">你好</div><p>nǐ hǎo = halo</p>
+<button id="b2" type="button">Ucapkan 你好</button><div class="res" id="r2">Belum diuji</div></section>
+
+<section class="step"><h2>Info perangkat</h2><div class="res" id="info">Memuat...</div></section>
+
+<section class="step"><h2>Laporan</h2>
+<p>Salin teks ini dan kirim ke chat.</p>
+<textarea id="rep" readonly></textarea>
+<button id="cp" type="button">Salin laporan</button></section>
+</main>
+<script>
+var log={t1:'belum diuji',t2:'belum diuji'};
+function $(i){return document.getElementById(i)}
+function report(){
+  var s='speechSynthesis: '+('speechSynthesis' in window?'ada':'TIDAK ADA')+'\n';
+  s+='Tes bip: '+log.t1+'\nTes suara Mandarin: '+log.t2+'\n'+($('info').textContent);
+  $('rep').value=s;
+}
+function voices(){return ('speechSynthesis' in window)?speechSynthesis.getVoices():[]}
+function info(){
+  var v=voices(),zh=v.filter(function(x){return /^zh/i.test(x.lang)});
+  $('info').textContent='Jumlah suara: '+v.length+'\nSuara Mandarin: '+(zh.length?zh.map(function(x){return x.name+' ('+x.lang+')'}).join(', '):'TIDAK ADA')+'\nBrowser: '+navigator.userAgent.slice(0,90);
+  report();
+}
+if('speechSynthesis' in window){speechSynthesis.onvoiceschanged=info}
+setTimeout(info,300);setTimeout(info,1500);
+
+$('b1').onclick=function(){
+  try{
+    var A=window.AudioContext||window.webkitAudioContext,c=new A(),o=c.createOscillator(),g=c.createGain();
+    o.frequency.value=660;g.gain.value=0.3;o.connect(g);g.connect(c.destination);o.start();
+    setTimeout(function(){o.stop();c.close()},500);
+    log.t1='perintah berjalan tanpa error (tanyakan: terdengar atau tidak?)';
+    $('r1').innerHTML='Bip diputar. Terdengar? Jika tidak, cek volume media dan mode senyap.';
+  }catch(e){log.t1='error: '+e.message;$('r1').innerHTML='<span class="bad">Error: '+e.message+'</span>'}
+  report();
+};
+$('b2').onclick=function(){
+  if(!('speechSynthesis' in window)){log.t2='speechSynthesis tidak tersedia';$('r2').innerHTML='<span class="bad">Browser ini tidak punya fitur suara.</span>';report();return}
+  var u=new SpeechSynthesisUtterance('你好');u.lang='zh-CN';u.rate=0.8;u.volume=1;
+  var zh=voices().filter(function(x){return /^zh/i.test(x.lang)});
+  if(zh.length)u.voice=zh[0];
+  u.onstart=function(){log.t2='mulai bicara (event start terpanggil)';$('r2').innerHTML='<span class="ok">Mulai bicara.</span> Terdengar?';report()};
+  u.onend=function(){log.t2+='; selesai';report()};
+  u.onerror=function(e){log.t2='ERROR: '+e.error;$('r2').innerHTML='<span class="bad">Error: '+e.error+'</span>';report()};
+  speechSynthesis.cancel();speechSynthesis.speak(u);
+  $('r2').textContent='Mengirim perintah bicara...';
+  setTimeout(function(){if(log.t2==='belum diuji'){log.t2='tidak ada event start/error dalam 2 detik';$('r2').innerHTML='<span class="bad">Tidak ada respons dari mesin suara.</span>';report()}},2000);
+};
+$('cp').onclick=function(){
+  var t=$('rep');t.select();
+  try{navigator.clipboard.writeText(t.value).catch(function(){})}catch(e){}
+  $('cp').textContent='Tersalin, kalau gagal tahan teks lalu salin manual';
+};
+report();
+</script>
+</body>
+</html>

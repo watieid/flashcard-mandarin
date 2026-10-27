@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kartu Mandarin</title>
+<style>
+:root{--bg:#f5f2ec;--fg:#1c1a18;--mut:#6a645c;--card:#fffdf9;--line:#ddd5c8;--acc:#b8322a;--acc2:#1f5f5b;--ok:#1e7a46;--bad:#b3261e;--shadow:0 6px 24px rgba(40,25,10,.12)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161413;--fg:#f0ebe4;--mut:#a39b91;--card:#211e1c;--line:#3a3532;--acc:#ff7a66;--acc2:#6cc3bb;--ok:#5fcf8f;--bad:#ff8a80;--shadow:0 6px 24px rgba(0,0,0,.4);color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px}
+h1{font-size:20px;margin:0;letter-spacing:.01em}
+.streak{font-weight:700;color:var(--acc);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tabs{display:flex;gap:8px}
+.tab{flex:1;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-weight:600}
+.tab[aria-pressed="true"]{background:var(--acc2);color:var(--bg);border-color:var(--acc2)}
+.prog{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.row{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;position:relative}
+.bar i{display:block;height:100%;background:var(--acc2);width:0;transition:width .5s ease}
+.bar b{position:absolute;top:0;bottom:0;width:2px;background:var(--acc)}
+.stage{perspective:900px}
+.card{position:relative;width:100%;min-height:290px;cursor:pointer;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.8,.2,1);border:0;background:none;padding:0;font:inherit;color:inherit;text-align:center}
+.card.flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px}
+.back{transform:rotateY(180deg)}
+.hanzi{font-size:64px;line-height:1.15;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;word-break:break-all}
+.hanzi.long{font-size:38px}
+.pinyin{font-size:26px;color:var(--acc);font-weight:600}
+.arti{font-size:21px}
+.hint{font-size:13px;color:var(--mut)}
+.card.enter{animation:enter .35s ease}
+@keyframes enter{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button.btn{font:inherit;font-weight:700;min-height:52px;border-radius:12px;border:0;color:#fff;cursor:pointer}
+.no{background:var(--bad)}.yes{background:var(--ok)}
+button.btn:disabled{opacity:.35}
+button:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.snd{display:flex;gap:10px}
+.snd button{flex:1;min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-weight:600;cursor:pointer}
+.status{font-size:13px;color:var(--mut);min-height:20px}
+.status.bad{color:var(--bad)}
+.done{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:28px 20px;text-align:center;display:flex;flex-direction:column;gap:12px;animation:enter .4s ease}
+.done h2{margin:0;font-size:24px}
+.done p{margin:0;color:var(--mut)}
+.pop{font-size:56px;animation:pop .7s ease}
+@keyframes pop{0%{transform:scale(.3) rotate(-20deg);opacity:0}60%{transform:scale(1.2) rotate(6deg)}100%{transform:none;opacity:1}}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Kartu Mandarin</h1>
+    <div class="streak" id="streak">Streak 0 hari</div>
+  </header>
+
+  <div class="tabs" role="group" aria-label="Jenis kartu">
+    <button class="tab" id="tabW" type="button" aria-pressed="true">Kata</button>
+    <button class="tab" id="tabS" type="button" aria-pressed="false">Kalimat</button>
+  </div>
+
+  <section class="prog" aria-label="Kemajuan">
+    <div class="row"><span id="progLabel">Hafal 0 dari 50 kata</span><span id="progMin">Minimum 30</span></div>
+    <div class="bar"><i id="progBar"></i><b id="progMark"></b></div>
+  </section>
+
+  <section id="study">
+    <div class="row" style="margin-bottom:8px"><span id="count">Kartu 1 dari 10</span><span>Sisa hari ini: <span id="left">0</span></span></div>
+    <div class="stage">
+      <button class="card" id="card" type="button" aria-label="Kartu, ketuk untuk membalik">
+        <div class="face front">
+          <div class="hanzi" id="hz"></div>
+          <div class="hint">Ketuk kartu untuk melihat arti</div>
+        </div>
+        <div class="face back">
+          <div class="hanzi" id="hz2" style="font-size:40px"></div>
+          <div class="pinyin" id="py"></div>
+          <div class="arti" id="ar"></div>
+        </div>
+      </button>
+    </div>
+    <div class="snd" style="margin-top:12px">
+      <button type="button" id="play">Dengar</button>
+      <button type="button" id="slow">Dengar pelan</button>
+    </div>
+    <div class="status" id="status" role="status"></div>
+    <div class="actions" style="margin-top:6px">
+      <button class="btn no" id="no" type="button" disabled>Belum hafal</button>
+      <button class="btn yes" id="yes" type="button" disabled>Hafal</button>
+    </div>
+  </section>
+
+  <section class="done" id="done" hidden>
+    <div class="pop">&#127881;</div>
+    <h2>Sesi hari ini selesai</h2>
+    <p id="doneTxt"></p>
+    <button class="btn yes" id="again" type="button">Latihan lagi</button>
+  </section>
+</main>
+
+<script>
+(function(){
+"use strict";
+var WORDS=[
+["你好","nǐ hǎo","halo"],["谢谢","xièxie","terima kasih"],["不客气","bú kèqi","sama-sama"],["对不起","duìbuqǐ","maaf"],["没关系","méi guānxi","tidak apa-apa"],
+["再见","zàijiàn","sampai jumpa"],["是","shì","adalah / ya"],["不","bù","tidak"],["我","wǒ","saya"],["你","nǐ","kamu"],
+["他","tā","dia (laki-laki)"],["她","tā","dia (perempuan)"],["我们","wǒmen","kami / kita"],["好","hǎo","baik / bagus"],["吃","chī","makan"],
+["喝","hē","minum"],["水","shuǐ","air"],["茶","chá","teh"],["米饭","mǐfàn","nasi"],["要","yào","mau / ingin"],
+["有","yǒu","punya / ada"],["没有","méiyǒu","tidak punya / tidak ada"],["去","qù","pergi"],["来","lái","datang"],["家","jiā","rumah"],
+["学校","xuéxiào","sekolah"],["工作","gōngzuò","kerja"],["朋友","péngyou","teman"],["妈妈","māma","ibu"],["爸爸","bàba","ayah"],
+["孩子","háizi","anak"],["今天","jīntiān","hari ini"],["明天","míngtiān","besok"],["现在","xiànzài","sekarang"],["钱","qián","uang"],
+["多少","duōshao","berapa banyak"],["大","dà","besar"],["小","xiǎo","kecil"],["多","duō","banyak"],["喜欢","xǐhuan","suka"],
+["爱","ài","cinta"],["想","xiǎng","ingin / rindu"],["知道","zhīdào","tahu"],["会","huì","bisa (punya keterampilan)"],["说","shuō","berbicara"],
+["看","kàn","melihat"],["买","mǎi","membeli"],["一","yī","satu"],["二","èr","dua"],["三","sān","tiga"]
+];
+var SENT=[
+["你好吗？","Nǐ hǎo ma?","Apa kabar?"],["我很好，谢谢。","Wǒ hěn hǎo, xièxie.","Saya baik, terima kasih."],
+["你叫什么名字？","Nǐ jiào shénme míngzi?","Siapa namamu?"],["我叫小明。","Wǒ jiào Xiǎomíng.","Namaku Xiaoming."],
+["很高兴认识你。","Hěn gāoxìng rènshi nǐ.","Senang berkenalan denganmu."],["我不会说中文。","Wǒ bú huì shuō Zhōngwén.","Saya tidak bisa berbicara Mandarin."],
+["请再说一遍。","Qǐng zài shuō yí biàn.","Tolong ulangi sekali lagi."],["我听不懂。","Wǒ tīng bù dǒng.","Saya tidak mengerti (yang didengar)."],
+["这个多少钱？","Zhège duōshao qián?","Ini berapa harganya?"],["太贵了。","Tài guì le.","Terlalu mahal."],
+["我要这个。","Wǒ yào zhège.","Saya mau yang ini."],["我想喝水。","Wǒ xiǎng hē shuǐ.","Saya ingin minum air."],
+["我饿了。","Wǒ è le.","Saya lapar."],["厕所在哪里？","Cèsuǒ zài nǎlǐ?","Toilet di mana?"],
+["我爱你。","Wǒ ài nǐ.","Aku cinta kamu."],["今天天气很好。","Jīntiān tiānqì hěn hǎo.","Cuaca hari ini bagus."],
+["你吃饭了吗？","Nǐ chīfàn le ma?","Sudah makan belum?"],["我们一起去吧。","Wǒmen yìqǐ qù ba.","Ayo kita pergi bersama."],
+["明天见。","Míngtiān jiàn.","Sampai besok."],["没问题。","Méi wèntí.","Tidak masalah."]
+];
+var SESSION=10, KEY="kartu-mandarin-v1";
+var MIN={w:30,s:10}, GOAL={w:50,s:20};
+var DAY=86400000;
+
+function $(i){return document.getElementById(i)}
+function today(){var d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
+function dayNum(){var d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/DAY)}
+
+var state={cards:{},streak:0,last:-1,doneToday:{w:false,s:false}};
+function load(){
+  try{var r=localStorage.getItem(KEY);if(r){var o=JSON.parse(r);if(o&&o.cards)state=o}}catch(e){}
+  if(!state.doneToday)state.doneToday={w:false,s:false};
+  if(state.dtDate!==today()){state.doneToday={w:false,s:false};state.dtDate=today()}
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function cid(t,i){return t+i}
+function box(t,i){var c=state.cards[cid(t,i)];return c?c.b:0}
+function due(t,i){var c=state.cards[cid(t,i)];return !c||c.d<=dayNum()}
+
+var type="w", queue=[], total=0, idx=0, flipped=false, voice=null, spoke=false;
+function data(){return type==="w"?WORDS:SENT}
+
+/* ---------- Suara ---------- */
+function pickVoice(){
+  if(!("speechSynthesis" in window))return;
+  var v=speechSynthesis.getVoices();
+  var zh=v.filter(function(x){return /^zh/i.test(x.lang.replace("_","-"))});
+  var pref=zh.filter(function(x){return /CN|cmn|Hans/i.test(x.lang+x.name)});
+  voice=(pref[0]||zh[0])||null;
+  var s=$("status");
+  if(!("speechSynthesis" in window)){s.textContent="Browser ini tidak mendukung suara.";s.className="status bad"}
+  else if(!voice&&v.length){s.textContent="Suara Mandarin tidak ditemukan di HP ini.";s.className="status bad"}
+  else{s.textContent="";s.className="status"}
+}
+if("speechSynthesis" in window){speechSynthesis.onvoiceschanged=pickVoice}
+pickVoice();setTimeout(pickVoice,500);setTimeout(pickVoice,1500);
+
+function speak(text,rate){
+  if(!("speechSynthesis" in window))return;
+  try{
+    var u=new SpeechSynthesisUtterance(text);
+    u.lang="zh-CN";u.rate=rate||0.85;u.volume=1;
+    if(voice)u.voice=voice;
+    u.onerror=function(e){var s=$("status");s.textContent="Suara gagal: "+e.error;s.className="status bad"};
+    speechSynthesis.cancel();speechSynthesis.speak(u);
+  }catch(e){}
+}
+function cur(){return queue[idx]}
+function say(rate){var c=cur();if(c!==undefined)speak(data()[c][0],rate)}
+
+/* ---------- Kartu ---------- */
+function buildQueue(){
+  var d=data(),ids=[];
+  d.forEach(function(_,i){if(due(type,i))ids.push(i)});
+  ids.sort(function(a,b){return box(type,a)-box(type,b)||a-b});
+  queue=ids.slice(0,SESSION);total=queue.length;idx=0;
+}
+function updateProg(){
+  var d=data(),n=0;
+  d.forEach(function(_,i){if(box(type,i)>=1)n++});
+  var g=GOAL[type],m=MIN[type];
+  $("progLabel").textContent="Hafal "+n+" dari "+g+(type==="w"?" kata":" kalimat");
+  $("progMin").textContent="Minimum "+m;
+  $("progBar").style.width=Math.min(100,n/g*100)+"%";
+  $("progMark").style.left=(m/g*100)+"%";
+}
+function updateStreak(){$("streak").textContent="Streak "+state.streak+" hari"}
+function render(){
+  updateProg();updateStreak();
+  var study=$("study"),done=$("done");
+  if(!queue.length||idx>=queue.length){
+    study.hidden=true;done.hidden=false;
+    var n=0;data().forEach(function(_,i){if(box(type,i)>=1)n++});
+    $("doneTxt").textContent=total?("Kamu menyelesaikan "+total+" kartu. Total hafal: "+n+" dari "+GOAL[type]+". Besok ada ulangan baru."):"Tidak ada kartu yang jatuh tempo sekarang. Kembali besok, atau coba tab lain.";
+    if(total)markDone();
+    return;
+  }
+  study.hidden=false;done.hidden=true;
+  var c=cur(),row=data()[c];
+  $("hz").textContent=row[0];$("hz2").textContent=row[0];
+  $("hz").className="hanzi"+(type==="s"?" long":"");
+  $("py").textContent=row[1];$("ar").textContent=row[2];
+  $("count").textContent="Kartu "+(idx+1)+" dari "+queue.length;
+  $("left").textContent=queue.length-idx;
+  flipped=false;
+  var card=$("card");card.classList.remove("flip");
+  card.classList.remove("enter");void card.offsetWidth;card.classList.add("enter");
+  $("yes").disabled=true;$("no").disabled=true;
+}
+function markDone(){
+  if(state.doneToday.w||state.doneToday.s){return}
+  var dn=dayNum();
+  if(state.last===dn){}
+  else if(state.last===dn-1){state.streak+=1;state.last=dn}
+  else{state.streak=1;state.last=dn}
+  state.doneToday[type]=true;
+  save();updateStreak();
+}
+function flip(){
+  if(cur()===undefined)return;
+  flipped=!flipped;
+  $("card").classList.toggle("flip",flipped);
+  if(flipped){$("yes").disabled=false;$("no").disabled=false;say(0.85)}
+}
+function answer(ok){
+  var c=cur();if(c===undefined)return;
+  var k=cid(type,c),o=state.cards[k]||{b:0,d:0};
+  if(ok){o.b=Math.min(4,o.b+1);var gap=[0,1,3,7,14][o.b];o.d=dayNum()+gap;idx++}
+  else{o.b=0;o.d=dayNum();queue.push(c);idx++}
+  state.cards[k]=o;save();render();
+}
+function setType(t){
+  type=t;
+  $("tabW").setAttribute("aria-pressed",t==="w");
+  $("tabS").setAttribute("aria-pressed",t==="s");
+  buildQueue();render();
+}
+
+$("card").addEventListener("click",flip);
+$("play").addEventListener("click",function(){say(0.85)});
+$("slow").addEventListener("click",function(){say(0.5)});
+$("yes").addEventListener("click",function(){answer(true)});
+$("no").addEventListener("click",function(){answer(false)});
+$("tabW").addEventListener("click",function(){setType("w")});
+$("tabS").addEventListener("click",function(){setType("s")});
+$("again").addEventListener("click",function(){
+  var d=data();
+  d.forEach(function(_,i){var k=cid(type,i),o=state.cards[k];if(o&&o.b<2)o.d=dayNum()});
+  buildQueue();
+  if(!queue.length){var list=[];d.forEach(function(_,i){list.push(i)});queue=list.slice(0,SESSION);total=queue.length}
+  idx=0;render();
+});
+
+load();buildQueue();render();
+})();
+</script>
+</body>
+</html>
