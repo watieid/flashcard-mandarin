@@ -1,15 +1,11 @@
-// Isi bagian ini dengan konfigurasi dari proyek Firebase-mu.
-// Selama masih null, aplikasi berjalan dalam mode tamu (tanpa login).
-//
-// Cara mengisi: di Firebase Console, buka Project settings > General > Your apps > Web app,
-// lalu salin objek firebaseConfig ke bawah ini. Contoh bentuknya:
-//
-// window.FIREBASE_CONFIG = {
-//   apiKey: "....",
-//   authDomain: "nama-proyek.firebaseapp.com",
-//   projectId: "nama-proyek",
-//   storageBucket: "nama-proyek.appspot.com",
-//   messagingSenderId: "....",
-//   appId: "...."
-// };
-window.FIREBASE_CONFIG = null;
+// Konfigurasi Firebase untuk aplikasi Kartu Mandarin.
+// Kunci web Firebase memang boleh publik; keamanan data dijaga oleh aturan Firestore.
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDiYc60alg4l3enl_yOr5Qd8IjtrH0c7eg",
+  authDomain: "flashcard-mandarin.firebaseapp.com",
+  projectId: "flashcard-mandarin",
+  storageBucket: "flashcard-mandarin.firebasestorage.app",
+  messagingSenderId: "1061721538637",
+  appId: "1:1061721538637:web:2248ca816380e4da749c04",
+  measurementId: "G-JZ8975T93P"
+};
