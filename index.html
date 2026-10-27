@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Kartu Mandarin</title>
 <style>
-:root{--bg:#f5f2ec;--fg:#1c1a18;--mut:#6a645c;--card:#fffdf9;--line:#ddd5c8;--acc:#b8322a;--acc2:#1f5f5b;--ok:#1e7a46;--bad:#b3261e;--shadow:0 6px 24px rgba(40,25,10,.12)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161413;--fg:#f0ebe4;--mut:#a39b91;--card:#211e1c;--line:#3a3532;--acc:#ff7a66;--acc2:#6cc3bb;--ok:#5fcf8f;--bad:#ff8a80;--shadow:0 6px 24px rgba(0,0,0,.4);color-scheme:dark}}
+:root{--bg:#f5f2ec;--fg:#1c1a18;--mut:#6a645c;--card:#fffdf9;--line:#ddd5c8;--acc:#b8322a;--acc2:#1f5f5b;--ok:#1e7a46;--bad:#b3261e;--shadow:0 6px 24px rgba(40,25,10,.12);--front:#b32a22;--front-fg:#fff6ee;--back:#1d6b47;--back-fg:#f2fff7;--back-acc:#ffe3a3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--front:#8f1f19;--back:#14543a;--bg:#161413;--fg:#f0ebe4;--mut:#a39b91;--card:#211e1c;--line:#3a3532;--acc:#ff7a66;--acc2:#6cc3bb;--ok:#5fcf8f;--bad:#ff8a80;--shadow:0 6px 24px rgba(0,0,0,.4);color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -29,7 +29,10 @@ h1{font-size:20px;margin:0;letter-spacing:.01em}
 .card{position:relative;width:100%;min-height:290px;cursor:pointer;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.8,.2,1);border:0;background:none;padding:0;font:inherit;color:inherit;text-align:center}
 .card.flip{transform:rotateY(180deg)}
 .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px}
-.back{transform:rotateY(180deg)}
+.front{background:var(--front);color:var(--front-fg);border-color:transparent}
+.back{transform:rotateY(180deg);background:var(--back);color:var(--back-fg);border-color:transparent}
+.back .pinyin{color:var(--back-acc)}
+.front .hint{color:var(--front-fg);opacity:.8}
 .hanzi{font-size:64px;line-height:1.15;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;word-break:break-all}
 .hanzi.long{font-size:38px}
 .pinyin{font-size:26px;color:var(--acc);font-weight:600}
